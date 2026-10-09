@@ -1,0 +1,20 @@
+#!/bin/bash
+# Code repo gates. Blocks the commit on any failure.
+fail() { echo "✗ pre-commit: $1" >&2; exit 1; }
+added=$(git diff --cached --name-only --diff-filter=ACMR)
+
+# 1. No secrets, raw data or caches.
+echo "$added" | grep -E '(^|/)\.env$|(^|/)\.env\.[^e]|(^|/)runs/|__pycache__' && fail ".env, runs/ or __pycache__ staged"
+if [ -n "$added" ] && git diff --cached -U0 -- $added | grep -E '^\+' | grep -qE 'sk-[A-Za-z0-9_-]{20,}|apify_api_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}'; then
+  fail "something that looks like an API key is staged"
+fi
+
+# 2. This repo is public: no links to the private spec repo.
+if [ -n "$added" ] && git diff --cached -U0 -- $added | grep -E '^\+' | grep -qE 'github\.com/mlomovskoy/from_dusk_till_down_unforgd_007([^_]|$)'; then
+  fail "link to the private spec repo staged (this repo is public)"
+fi
+
+# 3. Offline tests must pass.
+python3 -m dd_agent test >/tmp/dd_test.out 2>&1 || { tail -20 /tmp/dd_test.out >&2; fail "python3 -m dd_agent test failed"; }
+rm -rf runs/*-acme-logistika-procurement 2>/dev/null
+echo "✓ pre-commit: code repo gates passed"

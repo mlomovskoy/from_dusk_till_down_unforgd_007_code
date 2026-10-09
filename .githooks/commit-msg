@@ -1,0 +1,9 @@
+#!/bin/bash
+# Conventional prefix; feat/fix must name a task ID, e.g. "feat(T9): ..." (spec-driven development).
+line=$(head -1 "$1")
+echo "$line" | grep -qE '^(docs|feat|fix|test|chore|build|refactor)(\([^)]+\))?: .+' || {
+  echo "✗ commit-msg: first line must start with docs:/feat:/fix:/test:/chore:/build:/refactor:" >&2; exit 1; }
+if echo "$line" | grep -qE '^(feat|fix)'; then
+  echo "$line" | grep -qE '^(feat|fix)\(T[0-9]+[a-z]?\): ' || {
+    echo "✗ commit-msg: feat/fix commits must name a task, e.g. 'feat(T9): ...'" >&2; exit 1; }
+fi

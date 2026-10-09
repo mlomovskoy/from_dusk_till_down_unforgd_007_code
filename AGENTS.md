@@ -25,6 +25,16 @@ Keys live only in `.env` (git-ignored; see `.env.example`). Never commit, print 
 - A skipped step must never look like a clean result, and counters must count what actually happened.
 - Make every new check fail on purpose once before trusting it.
 
+## Automated gates
+
+Versioned git hooks in `.githooks/` enforce the rules. Enable them once per clone:
+`git config core.hooksPath .githooks`.
+
+- **pre-commit** blocks `.env`, `runs/` and `__pycache__`, staged text that looks like an API key, and
+  links to private repos. It also runs `python3 -m dd_agent test`, which must pass.
+- **commit-msg** requires a conventional prefix. `feat` and `fix` must name a task, e.g. `feat(T9): ...`.
+- **Never use `git commit --no-verify`.** If a gate is wrong, fix the gate in its own commit and say why.
+
 ## Git
 
 - Conventional commit prefixes: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
