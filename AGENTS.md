@@ -1,27 +1,32 @@
-# Due Diligence Agent (code) — Conventions
+# Contributor and agent guide
 
-**This repo is the implementation only.** The source of truth for scope, requirements, design, tasks,
-decisions (ADRs) and status is the spec repo, the sibling folder
-[`../from_dusk_till_down_unforgd_007`](https://github.com/mlomovskoy/from_dusk_till_down_unforgd_007).
-Its `AGENTS.md` holds every convention (hard rules from the brief, working with Maxim, verification,
-bugs, git, sessions) and **applies here unchanged**. Read it first. This file holds only what is
-specific to the code repo.
+Applies to humans and AI coding agents working in this repo.
 
-## Spec-driven workflow
+## Hard rules (from the Case 01 brief, non-negotiable)
 
-1. Read `docs/specs/requirements.md`, `design.md` and `tasks.md` in the spec repo.
-2. Pick a task by ID (e.g. `T7`). If the work has no task, add the task to the spec repo first.
-3. Implement it here and run its check. Commit with the task ID in the message (`feat(T7): ...`).
-4. Tick the task and update `docs/STATUS.md` in the spec repo. Behaviour that changes the design
-   changes `design.md` (or gets an ADR) **before** the code.
+1. **Public data only.** No logins, fake accounts, CAPTCHA bypassing, or breach/leak databases.
+2. **Use existing Apify actors** for anything an actor already covers. Don't write scrapers.
+   Official public APIs (such as ARES) are fine.
+3. **Never infer GDPR Art. 9 data** (health, politics, religion, ethnicity, sexuality).
+4. **No personality, credit or "trustworthiness" score** of a person, and no overall risk score.
+5. **Outreach is drafted and shown, never sent.** No code path may contact a research subject.
+6. **Label every source** `LIVE`, `CACHED` or `MOCK`. Mock data only for an unreachable source.
+7. **Minimise personal data:** registry home addresses and birth dates are dropped before storage.
+8. **Delete raw scraped data** when you no longer need it: `python -m dd_agent purge`.
 
-## Code-repo specifics
+## Secrets
 
-- **Run:** `python -m dd_agent serve` (web form) or `python -m dd_agent run ...` (see README.md).
-- **Tests:** `python3 -m dd_agent test` runs the `python` blocks in `tests/*.md` (spec ADR-0006).
-  Tests earn 🟡 at most; only a live run earns 🟢.
-- **Keys** only in `.env` (git-ignored). Never print them.
-- **Raw data** lives in `runs/` (git-ignored). Delete it after judging: `python -m dd_agent purge`.
-- **Wanderson's repo** (`../from_dusk_till_down`) is read-only for agents (spec ADR-0001).
-- **Git:** agents commit or push only when Maxim asks. Never force-push `main`. Only the latest commit
-  at the 07:14 freeze is judged.
+Keys live only in `.env` (git-ignored; see `.env.example`). Never commit, print or log them.
+
+## Verification
+
+- 🟢 verified by a real live run · 🟡 verified by tests or stubs only · 🔴 open or broken.
+- `python3 -m dd_agent test` runs the `python` blocks in `tests/*.md`. Tests earn 🟡 at most.
+- A skipped step must never look like a clean result, and counters must count what actually happened.
+- Make every new check fail on purpose once before trusting it.
+
+## Git
+
+- Conventional commit prefixes: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
+- Never force-push `main`. Never commit `.env`, `runs/` or `__pycache__/`.
+- AI agents commit or push only when a maintainer asks.

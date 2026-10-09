@@ -15,9 +15,22 @@ subject + anchor + goal
    └─6 verify    CODE checks each quote really is in the source and assigns confidence by rules
 ```
 
-**Specs live in a separate repo:** [`from_dusk_till_down_unforgd_007`](https://github.com/mlomovskoy/from_dusk_till_down_unforgd_007)
-(spec-driven development: `docs/specs/` requirements → design → tasks, ADRs, status). This repo is the
-implementation only. Every change here should trace back to a task ID in `docs/specs/tasks.md` there.
+## How it works
+
+- **Identity first.** The Czech registry (ARES) pins down *which* entity is meant. Same-name companies are
+  listed as look-alikes. If the name and anchor still match several records, the agent does **not
+  guess**: it lists the candidates and says so.
+- **The goal drives the research.** Each goal (`procurement`, `hiring`, `sales`) has its own questions and
+  its own search queries (`dd_agent/goals.py`). The same subject with a different goal gives a different report.
+- **Namesakes are excluded.** Each web page is marked same / possible / different entity before any
+  claim is taken from it.
+- **Evidence, not summaries.** Every claim must carry a verbatim quote. Code checks that the quote is
+  really in the source (`dd_agent/verify.py`), and a claim that fails is kept and flagged `UNSUPPORTED`.
+- **Confidence is set in code, not by the LLM:** 🟢 high = official registry or 2+ independent publishers ·
+  🟡 medium = single publisher, or an inference · 🔴 low = unsupported, contradicted, or possibly a
+  different entity.
+- **Honest about gaps.** "Web search did not run" is never shown as "no evidence found". Every source is
+  labelled `LIVE`, `CACHED` or `MOCK`.
 
 ## Setup
 
@@ -35,7 +48,7 @@ stated in the report's limitations section.
 ```bash
 python -m dd_agent serve                                   # web form → http://localhost:8008
 python -m dd_agent run "Etnetera Activate" --kind organization --anchor ico:02713209 --goal procurement
-python -m dd_agent run "Jiří Štěpán" --kind person --anchor ico:02713209 --goal hiring
+python -m dd_agent run "<Full Name>" --kind person --anchor ico:<IČO of their company> --goal hiring
 python -m dd_agent run "Etnetera" --kind organization --anchor city:Praha --goal sales   # ambiguous → candidates
 python -m dd_agent run ... --replay runs/<run_id>          # re-analyse cached pages, labelled CACHED
 python -m dd_agent goals                                   # goals and their questions
@@ -71,3 +84,7 @@ of hiding them.
 - Registry coverage is Czech only (ARES). For foreign entities, legal status comes from web sources only.
 - Courts, sanctions lists and LinkedIn are covered only where they show up in Google results. The agent never logs in anywhere.
 - The identity check and claim extraction depend on the LLM. The quote check limits the damage when the LLM is wrong, but it can't catch a correct quote that has been misread.
+
+## License
+
+[MIT](LICENSE). Built during From Dusk Till Dawn #01 (Agents 0.0.7, Prague, 8–9 Oct 2026) by team UNFORGD.

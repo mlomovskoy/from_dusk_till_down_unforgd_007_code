@@ -1,10 +1,8 @@
 # CLAUDE.md
 
 @AGENTS.md
-@../from_dusk_till_down_unforgd_007/AGENTS.md
 
-> **⚠️ If those imports did not resolve, read [`AGENTS.md`](AGENTS.md) and
-> `../from_dusk_till_down_unforgd_007/AGENTS.md` now, before doing anything else.**
+> **⚠️ If that import did not resolve, read [`AGENTS.md`](AGENTS.md) now, before doing anything else.**
 
 ## Claude Code specifics
 
@@ -12,3 +10,5 @@
   `grep -c '^OPENAI_API_KEY=.\+' .env`.
 - **Live runs cost Apify and OpenAI credits.** Iterate with `--replay runs/<id>`; run live only to verify or demo.
 - **Offline tests:** `python3 -m dd_agent test` (pytest is not installed).
+- **Maintainers' private notes:** if a sibling folder `../from_dusk_till_down_unforgd_007` exists, read its
+  `AGENTS.md` and `docs/specs/` before working. It is private, so never link to it from this repo.
