@@ -32,12 +32,24 @@ subject + anchor + goal
 - **Honest about gaps.** "Web search did not run" is never shown as "no evidence found". Every source is
   labelled `LIVE`, `CACHED` or `MOCK`.
 
+## LLM step
+
+No paid key is needed for the LLM step. `DD_LLM` in `.env` selects the backend:
+
+| `DD_LLM` | Uses | Needs |
+|---|---|---|
+| `claude-cli` (default) | local Claude Code CLI, `claude -p` | Claude Code installed and logged in |
+| `grok-cli` | local Grok CLI, `agent -p` | the `agent` CLI installed and logged in |
+| `openai` | OpenAI Chat Completions | `OPENAI_API_KEY` |
+
+The web form and every report show which backend ran.
+
 ## Setup
 
 ```bash
 cd from_dusk_till_down_unforgd_007_code
 pip install "httpx>=0.27" "pydantic>=2.8"   # see requirements.md
-cp .env.example .env                     # add OPENAI_API_KEY and APIFY_API_TOKEN
+cp .env.example .env                     # add APIFY_API_TOKEN; pick DD_LLM (default claude-cli)
 ```
 
 The agent runs without keys, but reports only the registry data. Each missing key is

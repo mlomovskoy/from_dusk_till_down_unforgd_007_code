@@ -33,6 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 os.environ["OPENAI_API_KEY"] = "test"
+os.environ["DD_LLM"] = "openai"  # stubbed below; keeps the test independent of installed CLIs
 os.environ["APIFY_API_TOKEN"] = "test"
 
 from dd_agent import agent  # noqa: E402
@@ -159,6 +160,39 @@ def test_goal_changes_content():
              ("procurement", "hiring", "sales")}
     assert plans["procurement"] != plans["hiring"] != plans["sales"]
     assert Anchor.parse("02713209").type == "ico" and Anchor.parse("https://x.cz").type == "url"
+```
+
+## test_llm_backends: JSON extraction and backend selection (ADR-0011)
+
+Every backend must yield one JSON object. The extractor tolerates code fences and surrounding prose,
+and refuses replies with no object. `available()` reports an unknown backend or a missing key instead
+of failing later.
+
+```python
+def test_llm_backends():
+    from dd_agent import llm
+    assert llm.extract_json('{"a": 1}') == {"a": 1}
+    assert llm.extract_json('Sure!\n```json\n{"a": [1, 2]}\n```\nDone.') == {"a": [1, 2]}
+    assert llm.extract_json('text before {"a": {"b": "}"}} text after') == {"a": {"b": "}"}}
+    for bad in ("no json here", "[1, 2]"):
+        try:
+            llm.extract_json(bad)
+            raise AssertionError(f"accepted {bad!r}")
+        except ValueError:
+            pass
+    old = os.environ.get("DD_LLM")
+    try:
+        os.environ["DD_LLM"] = "nonsense"
+        ok, reason = llm.available()
+        assert not ok and "unknown" in reason
+        os.environ["DD_LLM"] = "openai"
+        saved = os.environ.pop("OPENAI_API_KEY", None)
+        ok, reason = llm.available()
+        assert not ok and "OPENAI_API_KEY" in reason
+        if saved is not None:
+            os.environ["OPENAI_API_KEY"] = saved
+    finally:
+        os.environ["DD_LLM"] = old or "openai"
 ```
 
 ## Runner

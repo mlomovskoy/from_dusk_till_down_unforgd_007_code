@@ -342,7 +342,7 @@ def run(subject: Subject, replay: Path | None = None, log: Log = print) -> tuple
     run_dir = config.RUNS_DIR / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     limitations: list[str] = []
-    use_llm = bool(config.openai_key())
+    use_llm, llm_reason = llm.available()
 
     log(f"▶ {subject.name} ({subject.kind}) | {subject.anchor.label()} | goal: {goal.label}")
     log("1/6 resolving identity in official registry")
@@ -410,7 +410,7 @@ def run(subject: Subject, replay: Path | None = None, log: Log = print) -> tuple
                 claims_by_q[question.id] += _claims_from_llm(data, question.id)
                 log(f"  {question.id}: {len(claims_by_q[question.id])} claims")
     elif web:
-        limitations.append("OPENAI_API_KEY is not set: web pages were collected but not analysed. "
+        limitations.append(f"LLM step unavailable ({llm_reason}): web pages were collected but not analysed. "
                            "Only registry facts are reported as claims.")
 
     log("6/6 verifying quotes and scoring confidence")
@@ -443,6 +443,9 @@ def run(subject: Subject, replay: Path | None = None, log: Log = print) -> tuple
             except Exception as e:
                 limitations.append(f"Outreach draft failed: {e}")
 
+    if use_llm:
+        limitations.append(f"LLM step: {llm_reason}. Identity checks and claim extraction are model output; "
+                           "every quote was checked against its source by code.")
     limitations.append("Coverage: Czech registry (ARES) + Google results via Apify. Courts, sanctions lists and "
                        "foreign registries are only covered where they appear in web results.")
     limitations.append("Raw scraped page text is stored in raw_sources.json for this run only; delete it with "

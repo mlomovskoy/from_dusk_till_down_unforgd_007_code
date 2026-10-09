@@ -34,7 +34,7 @@ this.querySelector('button').textContent='Researching… (1–3 min)'">
 <div class="hint">One fact that pins down WHICH entity: Czech IČO, website, city, or employer.</div>
 <label>Goal</label><select name="goal">{goals}</select>
 <button type="submit">Run research</button>
-<div class="hint" style="margin-top:8px">Keys: Apify {apify} · OpenAI {openai}</div>
+<div class="hint" style="margin-top:8px">Apify {apify} · LLM {openai}</div>
 </form>
 <div class="runs"><b>Previous runs</b><ul>{runs}</ul></div>
 </main></body></html>"""
@@ -48,6 +48,12 @@ def _runs() -> str:
         if (d / "report.html").exists():
             items.append(f"<li><a href='/runs/{escape(d.name)}/report.html'>{escape(d.name)}</a></li>")
     return "".join(items) or "<li class='hint'>none yet</li>"
+
+
+def _llm_label() -> str:
+    from . import llm
+    ok, reason = llm.available()
+    return f"✓ {reason}" if ok else f"✗ {reason} (no analysis)"
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -64,7 +70,7 @@ class Handler(BaseHTTPRequestHandler):
             goals = "".join(f"<option value='{g.id}'>{escape(g.label)}</option>" for g in GOALS.values())
             self._send(200, PAGE.format(goals=goals, runs=_runs(),
                                         apify="✓" if config.apify_token() else "✗ (registry only)",
-                                        openai="✓" if config.openai_key() else "✗ (no analysis)"))
+                                        openai=_llm_label()))
             return
         if self.path.startswith("/runs/"):
             parts = self.path.split("/")

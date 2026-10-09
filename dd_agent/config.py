@@ -28,6 +28,11 @@ def openai_model() -> str:
     return os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 
+def llm_backend() -> str:
+    """claude-cli (default), grok-cli or openai — see dd_agent/llm.py."""
+    return os.getenv("DD_LLM", "claude-cli").strip().lower()
+
+
 def apify_token() -> str | None:
     return os.getenv("APIFY_API_TOKEN") or None
 
