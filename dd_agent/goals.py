@@ -105,6 +105,34 @@ GOALS: dict[str, Goal] = {
             ],
         },
     ),
+    "investor": Goal(
+        id="investor",
+        label="Investment / partnership due diligence",
+        purpose="Decide whether to invest in or partner with the subject, and separate a strong pitch from "
+                "verifiable substance.",
+        questions={
+            "organization": [
+                Question("legal_entity", "Is it a registered legal entity, and since when?",
+                         ['"{name}" company registration OR founded OR "s.r.o." OR "a.s."'], uses_registry=True),
+                Question("founders_owners", "Who founded and owns it?",
+                         ['"{name}" founder OR CEO OR co-founder'], uses_registry=True),
+                Question("traction", "What traction is verifiable: product, customers, revenue signals?",
+                         ['"{name}" customers OR product OR launch OR github', '"{name}" {hint}']),
+                Question("funding", "Has it raised money, and from whom?",
+                         ['"{name}" funding OR investors OR seed OR raised']),
+                Question("red_flags", "Are there red flags: lawsuits, insolvency, failed ventures?",
+                         ['"{name}" lawsuit OR insolvency OR scam OR controversy'], uses_registry=True),
+            ],
+            "person": [
+                Question("ventures", "Which companies has the founder started or run?",
+                         ['"{name}" {hint} founder OR CEO OR co-founder'], uses_registry=True),
+                Question("track_record", "What verifiable track record backs the public claims?",
+                         ['"{name}" {hint}', '"{name}" github OR hackathon OR project']),
+                Question("red_flags", "Are there red flags: lawsuits, insolvencies, disputes?",
+                         ['"{name}" {hint} lawsuit OR fraud OR insolvency']),
+            ],
+        },
+    ),
 }
 
 

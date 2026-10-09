@@ -17,7 +17,7 @@ Prose between the blocks is documentation only.
 |---|---|
 | `test_verify_unit` | The quote matcher accepts whitespace/case differences and rejects absent text; a verified contradiction drops confidence to low |
 | `test_pipeline` | End to end: 2 independent sources → 🟢 high; contradiction with the registry → `CONTRADICTED`; fabricated quote → `UNSUPPORTED`; US namesake excluded; Art. 9 skips counted; report renders |
-| `test_goal_changes_content` | `procurement`, `hiring` and `sales` produce different search plans; anchors parse correctly |
+| `test_goal_changes_content` | `procurement`, `hiring`, `sales` and `investor` produce four different search plans; anchors parse correctly |
 
 ## Setup and stubs
 
@@ -157,8 +157,8 @@ def test_pipeline():
 def test_goal_changes_content():
     s = lambda g, k="organization": Subject(name="Acme", kind=k, anchor=Anchor.parse("city:Brno"), goal=g)
     plans = {g: set(agent.plan_queries(s(g), agent.get_goal(g), fake_resolve(None, None))) for g in
-             ("procurement", "hiring", "sales")}
-    assert plans["procurement"] != plans["hiring"] != plans["sales"]
+             ("procurement", "hiring", "sales", "investor")}
+    assert len({frozenset(v) for v in plans.values()}) == 4  # every goal plans different searches
     assert Anchor.parse("02713209").type == "ico" and Anchor.parse("https://x.cz").type == "url"
 ```
 
