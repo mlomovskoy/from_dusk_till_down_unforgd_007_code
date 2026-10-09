@@ -14,6 +14,7 @@ TIMEOUT = 20
 
 LEGAL_FORMS = {
     "101": "sole trader (fyzická osoba podnikající)",
+    "107": "sole trader (fyzická osoba podnikající, other)",
     "111": "general partnership (v.o.s.)",
     "112": "limited liability company (s.r.o.)",
     "113": "limited partnership (k.s.)",
@@ -115,10 +116,14 @@ def people(vr: dict) -> list[dict]:
 def basic_source(basic: dict, source_id: str) -> Source:
     ico = basic["ico"]
     regs = basic.get("seznamRegistraci", {}) or {}
+    # Sole traders and other natural persons (legal forms 1xx except companies) register at a personal address:
+    # never store or show it (hard rule: no home addresses of individuals).
+    natural_person = str(basic.get("pravniForma", "")) in {"101", "102", "105", "106", "107", "108", "109"}
     lines = [
         f"Business name: {basic.get('obchodniJmeno')}",
         f"IČO: {ico}",
-        f"Registered office: {(basic.get('sidlo') or {}).get('textovaAdresa', 'n/a')}",
+        ("Registered office: omitted (natural person; data minimisation)" if natural_person
+         else f"Registered office: {(basic.get('sidlo') or {}).get('textovaAdresa', 'n/a')}"),
         f"Legal form: {LEGAL_FORMS.get(str(basic.get('pravniForma')), basic.get('pravniForma'))}",
         f"Date established: {basic.get('datumVzniku', 'n/a')}",
     ]

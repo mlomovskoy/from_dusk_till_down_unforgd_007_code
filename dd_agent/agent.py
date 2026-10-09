@@ -112,8 +112,9 @@ def _resolve_org(subject: Subject, res: Resolution, log: Log) -> None:
 
     if chosen:
         res.company = chosen.get("obchodniJmeno", subject.name)
+        natural = str(chosen.get("pravniForma", "")) in {"101", "102", "105", "106", "107", "108", "109"}
         res.entity.update({"name": res.company, "ico": chosen["ico"],
-                           "address": (chosen.get("sidlo") or {}).get("textovaAdresa"),
+                           "address": "omitted (natural person)" if natural else (chosen.get("sidlo") or {}).get("textovaAdresa"),
                            "established": chosen.get("datumVzniku")})
         res.hint = res.hint or (chosen.get("sidlo") or {}).get("nazevObce", "")
     for c in candidates:
