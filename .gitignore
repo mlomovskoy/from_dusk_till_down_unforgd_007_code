@@ -5,3 +5,42 @@ runs/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Secrets and keys
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+credentials*.json
+service-account*.json
+secrets/
+.netrc
+
+# Research output and raw scraped data (personal data: never publish)
+runs/
+output/
+reports/
+data/
+*.sqlite
+*.sqlite3
+*.db
+*.jsonl
+*.har
+
+# Local tooling, logs and scratch
+.claude/
+.cursor/
+.idea/
+.vscode/
+.venv/
+venv/
+*.log
+*.out
+*.bak
+*.orig
+*.swp
+scratch/
+tmp/
+.pytest_cache/

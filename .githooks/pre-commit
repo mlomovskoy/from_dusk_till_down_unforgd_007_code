@@ -14,7 +14,27 @@ if [ -n "$added" ] && git diff --cached -U0 -- $added | grep -E '^\+' | grep -qE
   fail "link to the private spec repo staged (this repo is public)"
 fi
 
-# 3. Offline tests must pass.
+# 3. More leak classes: other key formats, private keys, local paths, personal emails, secret files.
+if echo "$added" | grep -qE '\.(pem|key|p12|pfx|sqlite3?|db|har|jsonl)$|(^|/)(id_rsa|id_ed25519|credentials[^/]*\.json|\.netrc)'; then
+  fail "key, credential, database or raw-data file staged"
+fi
+if [ -n "$added" ] && git diff --cached -U0 -- $added | grep -E '^\+' | grep -qE 'ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY|Bearer [A-Za-z0-9._-]{20,}'; then
+  fail "token or private key staged"
+fi
+if [ -n "$added" ] && git diff --cached -U0 -- $added | grep -E '^\+' | grep -qE '/Users/[a-z]|/home/[a-z]+/|C:\\Users\\'; then
+  fail "absolute local path staged (leaks the username)"
+fi
+if [ -n "$added" ] && git diff --cached -U0 -- $added | grep -E '^\+' | grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}' | grep -vE '@(users\.noreply\.github\.com|example\.(com|org|cz)|noreply\.anthropic\.com|anthropic\.com)$' | grep -q .; then
+  fail "email address staged (use example.com in docs and tests)"
+fi
+# Exact values of the secrets in the local .env must never appear in staged text (checked without printing them).
+if [ -f .env ] && [ -n "$added" ]; then
+  while IFS= read -r v; do
+    [ ${#v} -ge 8 ] && git diff --cached -U0 -- $added | grep -E '^\+' | grep -qF -- "$v" && fail "a value from .env is staged"
+  done < <(sed -nE 's/^[A-Z_]*(KEY|TOKEN|SECRET|PASSWORD)[A-Z_]*=//p' .env | tr -d "\"'")
+fi
+
+# 4. Offline tests must pass.
 python3 -m dd_agent test >/tmp/dd_test.out 2>&1 || { tail -20 /tmp/dd_test.out >&2; fail "python3 -m dd_agent test failed"; }
 rm -rf runs/*-acme-logistika-procurement 2>/dev/null
 echo "✓ pre-commit: code repo gates passed"
