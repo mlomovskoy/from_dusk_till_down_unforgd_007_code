@@ -47,6 +47,12 @@ def to_markdown(r: Report) -> str:
         src = {x.id: x for x in r.sources}
         out += [f"- [{v.source_id}] {src[v.source_id].title} — {v.reason}" for v in excluded]
 
+    if r.method:
+        out += ["", "## How this report was built", ""] + [f"{i}. {s}" for i, s in enumerate(r.method.get("steps", []), 1)]
+        if r.method.get("queries"):
+            out += ["", "| Search (from the goal) | For question | New pages |", "|---|---|---|"]
+            out += [f"| `{q['query']}` | {', '.join(q['questions'])} | {q['pages']} |" for q in r.method["queries"]]
+
     for f in r.findings:
         out += ["", f"## {f.question}", "", f"_{f.answer}_", ""]
         for c in f.claims:
@@ -165,6 +171,15 @@ def to_html(r: Report) -> str:
                                f"<a href='{escape(src[v.source_id].url)}'>{escape(src[v.source_id].title)}</a>"
                                f" <span class='meta'>— {escape(v.reason)}</span></li>" for v in excluded) + "</ul>")
     parts.append("</div>")
+
+    # how this report was built (R12)
+    if r.method:
+        steps = "".join(f"<li>{escape(s)}</li>" for s in r.method.get("steps", []))
+        rows = "".join(f"<tr><td><code>{escape(q['query'])}</code></td><td>{escape(', '.join(q['questions']))}</td>"
+                       f"<td>{q['pages']}</td></tr>" for q in r.method.get("queries", []))
+        parts.append("<div class='card'><h2>How this report was built</h2><ol>" + steps + "</ol>"
+                     + ("<div class='table-wrap'><table><tr><th>Search (from the goal)</th><th>For question</th>"
+                        "<th>New pages</th></tr>" + rows + "</table></div>" if rows else "") + "</div>")
 
     # findings
     for f in r.findings:

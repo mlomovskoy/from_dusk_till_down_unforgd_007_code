@@ -114,4 +114,5 @@ class Report(BaseModel):
     sources: list[Source] = Field(default_factory=list)
     suppressed_special_category: int = 0
     outreach_draft: Optional[str] = None
+    method: dict = Field(default_factory=dict)  # "How this report was built" (R12)
     limitations: list[str] = Field(default_factory=list)

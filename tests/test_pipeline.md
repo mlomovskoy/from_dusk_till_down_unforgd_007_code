@@ -146,6 +146,9 @@ def test_pipeline():
                for s in report.sources if s.id in c.source_ids)
     html, md = to_html(report), to_markdown(report)
     assert "UNSUPPORTED" in html and "Acme Logistics Inc. Texas" in md
+    assert "How this report was built" in md and "How this report was built" in html  # R12 / A9
+    import re as _re
+    assert int(_re.search(r"(\d+) claim\(s\) whose quote was not found", md).group(1)) >= 1
     (run_dir / "report.html").write_text(html, encoding="utf-8")
     (run_dir / "report.md").write_text(md, encoding="utf-8")
     print("report:", run_dir / "report.html")

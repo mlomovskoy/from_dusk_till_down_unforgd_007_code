@@ -451,10 +451,32 @@ def run(subject: Subject, replay: Path | None = None, log: Log = print) -> tuple
     limitations.append("Raw scraped page text is stored in raw_sources.json for this run only; delete it with "
                        "`python -m dd_agent purge` after judging.")
 
+    all_claims = [c for f in findings for c in f.claims]
+    matches = [v.match for v in identity]
+    method = {
+        "steps": [
+            f"Registry (ARES): {'resolved ' + res.entity.get('ico', '') if res.entity.get('ico') else 'not resolved'}; "
+            f"{len(res.sources)} registry record(s); {len(res.lookalikes)} look-alike(s) listed",
+            f"Searches: {len(plan)} planned from the goal's questions; "
+            + (f"replayed from a cached run" if replay else
+               f"{len(web)} public pages fetched via Apify RAG Web Browser" if config.apify_token() else "web step did not run"),
+            f"Identity check: {matches.count('same')} same, {matches.count('possible')} possible, "
+            f"{matches.count('different')} different entity (different = excluded from claims)",
+            f"Claims: {len(all_claims)} total; {sum(c.kind == 'fact' for c in all_claims)} facts, "
+            f"{sum(c.kind == 'inference' for c in all_claims)} inferences; extracted by "
+            + (llm_reason if use_llm else "no LLM (registry facts only)"),
+            f"Quote check (code): {sum('UNSUPPORTED' in c.flags for c in all_claims)} claim(s) whose quote was not found "
+            f"in the source, {sum('CONTRADICTED' in c.flags for c in all_claims)} contradicted by another source",
+            "Confidence (code rules, not the LLM): high = official registry or 2+ independent publishers; "
+            "medium = one publisher or an inference; low = unsupported, contradicted, or possibly another entity",
+        ],
+        "queries": [{"query": q, "questions": qids, "pages": sum(1 for s in web if s.query == q)}
+                    for q, qids in plan.items()],
+    }
     report = Report(run_id=run_id, subject=subject, goal_label=goal.label, goal_purpose=goal.purpose,
                     resolved_entity=res.entity, lookalikes=res.lookalikes, identity=identity,
                     findings=findings, sources=sources, suppressed_special_category=suppressed,
-                    outreach_draft=outreach, limitations=limitations)
+                    outreach_draft=outreach, limitations=limitations, method=method)
     return report, run_dir
 
 
