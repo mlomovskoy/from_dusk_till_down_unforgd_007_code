@@ -3,6 +3,7 @@
 https://apify.com/apify/rag-web-browser — takes a Google query (or a URL), returns page markdown.
 Public pages only; the actor does not log in anywhere.
 """
+import time
 from urllib.parse import urlparse
 
 import httpx
@@ -10,6 +11,9 @@ import httpx
 ACTOR = "apify~rag-web-browser"
 ENDPOINT = f"https://api.apify.com/v2/acts/{ACTOR}/run-sync-get-dataset-items"
 MAX_CHARS = 8000
+# The actor defaults to 8 GB per run; free accounts have 16 GB in total, so parallel runs got 402.
+# raw-http scraping needs little memory: 1 GB per run lets 4 searches run at once.
+MEMORY_MB = 1024
 
 
 def publisher(url: str) -> str:
@@ -26,7 +30,12 @@ def search(query: str, token: str, max_results: int = 3) -> list[dict]:
         "scrapingTool": "raw-http",
         "requestTimeoutSecs": 40,
     }
-    r = httpx.post(ENDPOINT, params={"token": token, "timeout": 120}, json=payload, timeout=150)
+    params = {"token": token, "timeout": 120, "memory": MEMORY_MB}
+    for attempt in range(2):
+        r = httpx.post(ENDPOINT, params=params, json=payload, timeout=150)
+        if r.status_code != 402 or attempt:
+            break
+        time.sleep(8)  # memory limit reached: wait for a running search to finish, retry once
     r.raise_for_status()
     pages = []
     for item in r.json():

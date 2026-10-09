@@ -193,7 +193,7 @@ def collect_web(plan: dict[str, list[str]], log: Log) -> tuple[list[Source], lis
         except Exception as e:
             return query, [], f"{type(e).__name__}: {e}"
 
-    with ThreadPoolExecutor(max_workers=6) as pool:
+    with ThreadPoolExecutor(max_workers=4) as pool:  # 4 × 1 GB actor memory (sources/apify.py)
         for query, pages, err in pool.map(run, plan):
             if err:
                 notes.append(f"Search failed for {query!r}: {err}")
